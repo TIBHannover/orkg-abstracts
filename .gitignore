@@ -3,7 +3,7 @@
 
 ### Project related stuff ###
 .idea
-/data/rdf_dump.nt
+/data/*.nt
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider

@@ -40,6 +40,10 @@ class OAIService(SingletonService):
         return self._query(dynamic_set='identifier', query=doi)
 
     def _by_title(self, title: str) -> str:
+        # ignore titles with less than 3 terms, since this cannot guarantee exact matching
+        if len(title.split(' ')) < 3:
+            return ''
+
         return self._query(dynamic_set='title', query=title)
 
     def _query(self, dynamic_set: str, query: str) -> str:

@@ -1,3 +1,5 @@
+from typing import List, Callable
+
 import numpy as np
 import pandas as pd
 
@@ -13,14 +15,17 @@ class RDFGraphService(SingletonService):
     The service follows the singleton pattern.
     """
 
-    def __init__(self, path, format='nt'):
+    def __init__(self, path: str, sanitize_fun: Callable = None, format='nt'):
         """
         Returns a singleton instance of this service.
 
         :param path: path or url to the rdf dump.
+        :param sanitize_fun: callable to sanitize the file provided by ```path`` before parsing it.
         :param format: Defaults to ``nt``. Format of the RDF dump file.
         :return: RDFGraphService instance.
         """
+        if sanitize_fun:
+            sanitize_fun(path)
 
         self.graph = Graph().parse(path, format=format)
         self.np_results = np.empty(shape=0)
@@ -46,7 +51,7 @@ class RDFGraphService(SingletonService):
         self.np_results = np.array(result)
         return self
 
-    def to_dataframe(self, columns=None) -> pd.DataFrame:
+    def to_dataframe(self, columns: List[str] = None) -> pd.DataFrame:
         """
         Converts the results of the latest query function call to a pandas.DataFrame.
 

@@ -12,6 +12,8 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 RDF_DUMP_PATH = os.path.join(CURRENT_DIR, 'data', 'rdf_dump.nt')
 PAPERS_DUMP_PATH = os.path.join(CURRENT_DIR, 'data', 'orkg_papers.csv')
 OAI_URL = 'https://getinfo.tib.eu/oai/intern/repository/tib'
+ORKG_COLUMNS = ['uri', 'title', 'doi']
+PAPER_COLUMNS = ['uri', 'title', 'doi', 'abstract', 'processed_abstract']
 
 SELECT = """
 PREFIX orkgp: <http://orkg.org/orkg/predicate/>
@@ -27,12 +29,33 @@ SELECT ?paper ?paper_title ?doi
 """
 
 
-# TODO: download a new rdf dump and sanitize it.
+# TODO: automatically download a new rdf dump and sanitize it.
 # TODO: use ArgumentParser
 # TODO: try to fetch abstracts for existing papers with missing data ?
 
 
+def sanitize_rdf_dump(path: str):
+    """
+    Sanitizes the RDF dump provided by ``path`` by removing corrupted lines and overwrites the corrupted version
+    with the sanitized one.
+
+    :param path: path to the RDF dump.
+    """
+    with open(path, 'r', encoding='utf-8') as f:
+        dump = f.readlines()
+
+    dump = [line for line in dump if not line.endswith('<null> .\n')]
+
+    with open(path, 'w', encoding='utf-8') as f:
+        f.writelines(dump)
+
+
 def extend_row_with_abstract(row: pd.Series) -> pd.Series:
+    """
+    Adds abstract columns to the given pd.Series.
+
+    :param row: pd.Series representing a row.
+    """
     oai_service = OAIService(OAI_URL)
 
     try:
@@ -62,15 +85,15 @@ def process_abstract(text: str) -> str:
 def main():
 
     print('Parsing the RDF dump from {}'.format(RDF_DUMP_PATH))
-    rdf_service = RDFGraphService(RDF_DUMP_PATH)
+    rdf_service = RDFGraphService(RDF_DUMP_PATH, sanitize_fun=sanitize_rdf_dump)
 
     # all orkg papers
     print('Querying ORKG...')
-    orkg_df = rdf_service.query(SELECT).to_dataframe(columns=['uri', 'title', 'doi']).loc[:100]  # TODO: remove head
+    orkg_df = rdf_service.query(SELECT).to_dataframe(columns=ORKG_COLUMNS)
 
     # the papers we have already fetched their abstracts
     if not os.path.exists(PAPERS_DUMP_PATH):
-        pd.DataFrame(columns=['uri', 'title', 'doi', 'abstract']).to_csv(PAPERS_DUMP_PATH, index=False)
+        pd.DataFrame(columns=PAPER_COLUMNS).to_csv(PAPERS_DUMP_PATH, index=False)
 
     print('Reading the papers dump from {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.read_csv(PAPERS_DUMP_PATH)
