@@ -3,17 +3,19 @@ import re
 import pandas as pd
 
 from tqdm import tqdm
+
+from services.metadata import MetadataService
+
 tqdm.pandas()
 
-from services.oai import OAIService
 from services.rdf import RDFGraphService
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-RDF_DUMP_PATH = os.path.join(CURRENT_DIR, 'data', 'rdf_dump.nt')
-PAPERS_DUMP_PATH = os.path.join(CURRENT_DIR, 'data', 'orkg_papers.csv')
-OAI_URL = 'https://getinfo.tib.eu/oai/intern/repository/tib'
+DATA_DIR = os.path.join(CURRENT_DIR, 'data')
+RDF_DUMP_PATH = os.path.join(DATA_DIR, 'rdf_dump.nt')
+PAPERS_DUMP_PATH = os.path.join(DATA_DIR, 'orkg_papers.csv')
 ORKG_COLUMNS = ['uri', 'title', 'doi']
-PAPER_COLUMNS = ['uri', 'title', 'doi', 'abstract', 'processed_abstract']
+PAPER_COLUMNS = ['uri', 'title', 'doi', 'abstract_source', 'abstract', 'processed_abstract']
 
 SELECT = """
 PREFIX orkgp: <http://orkg.org/orkg/predicate/>
@@ -56,13 +58,11 @@ def extend_row_with_abstract(row: pd.Series) -> pd.Series:
 
     :param row: pd.Series representing a row.
     """
-    oai_service = OAIService(OAI_URL)
+    metadata_service = MetadataService()
 
-    try:
-        abstract = oai_service.query(doi=row['doi'], title=row['title'])
-    except Exception:
-        abstract = ''
+    abstract_source, abstract = metadata_service.query(doi=row['doi'], title=row['title'])
 
+    row['abstract_source'] = abstract_source
     row['abstract'] = abstract
     row['processed_abstract'] = process_abstract(abstract)
 
@@ -97,6 +97,7 @@ def main():
 
     print('Reading the papers dump from {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.read_csv(PAPERS_DUMP_PATH)
+    print(papers_df.abstract_source.value_counts())
 
     # find those papers who exist in the orkg but do not in the papers dump
     new_papers_df = pd.concat(
@@ -118,6 +119,15 @@ def main():
     print('Dumping to {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.concat([papers_df, new_papers_df])
     papers_df.to_csv(PAPERS_DUMP_PATH, index=False)
+    print(papers_df.abstract_source.value_counts())
+
+    for value in papers_df.abstract_source.unique():
+        path = '{}_{}.csv'.format(
+            os.path.join(DATA_DIR, os.path.splitext(os.path.basename(PAPERS_DUMP_PATH))[0]),
+            value
+            )
+        value_paper_df = papers_df[papers_df.abstract_source == value]
+        value_paper_df.to_csv(path, index=False)
 
 
 if __name__ == '__main__':
