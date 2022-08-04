@@ -14,6 +14,10 @@ TODO:
 
 TODO:
 
-## Environment Variables / Commandline Arguments
+## Environment Variables
+The following environment variables are required to run the service
+and are defined in the `.env` file.
 
-TODO:
+| Variable                | Description                   |
+|-------------------------|-------------------------------|
+| ``ORKG_TRIPLE_STORE``   | URL to the ORKG triple store. |
