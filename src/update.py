@@ -3,18 +3,19 @@ import re
 import pandas as pd
 
 from tqdm import tqdm
+from datetime import datetime
 
 from src.services import MetadataService
 from src.services import RDFGraphService
 
 tqdm.pandas()
 
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = os.path.join(CURRENT_DIR, '../data')
+TRIPLE_STORE_URL = os.getenv('ORKG_TRIPLE_STORE')
+DATA_DIR = os.path.expanduser(os.getenv('DATA_DIRECTORY'))
 PAPERS_DUMP_PATH = os.path.join(DATA_DIR, 'orkg_papers.csv')
+CHANGELOG_PATH = os.path.join(DATA_DIR, 'changelog.txt')
 ORKG_COLUMNS = ['uri', 'title', 'doi']
 PAPER_COLUMNS = ['uri', 'title', 'doi', 'abstract_source', 'abstract', 'processed_abstract']
-TRIPLE_STORE_URL = os.getenv('ORKG_TRIPLE_STORE')  # ''
 
 
 SELECT = """
@@ -29,10 +30,6 @@ SELECT ?paper ?paper_title ?doi
            OPTIONAL { ?paper orkgp:P26 ?doi } .
     }
 """
-
-# TODO: cronjob
-# TODO: upload/download
-# TODO: print statistics
 
 
 def find_new_papers(new_df: pd.DataFrame, old_df: pd.DataFrame) -> pd.DataFrame:
@@ -79,6 +76,29 @@ def process_abstract(text: str) -> str:
     return ' '.join(re.sub(html_regex, ' ', text).split()).lower()
 
 
+def update_change_log(value_counts: pd.Series):
+    """
+    Updates the changelog with new statistics.
+
+    :param value_counts: A pandas series representing the statistics to be logged, where the index is the
+        feature_names and the values are the feature_counts.
+    """
+    with open(CHANGELOG_PATH, mode='r') as f:
+        changelog = f.readlines()
+
+    new_things = [
+        '\n### {} ###\n'.format(datetime.today().strftime('%Y-%m-%d')),
+        *[
+            '{}: {}\n'.format(value, count)
+            for value, count in value_counts.iteritems()
+        ]
+    ]
+    changelog = new_things + changelog  # prepend
+
+    with open(CHANGELOG_PATH, mode='w') as f:
+        f.writelines(changelog)
+
+
 def main():
 
     # all orkg papers
@@ -88,11 +108,12 @@ def main():
 
     # the papers we have already fetched their abstracts
     if not os.path.exists(PAPERS_DUMP_PATH):
+        os.makedirs(DATA_DIR, exist_ok=True)
         pd.DataFrame(columns=PAPER_COLUMNS).to_csv(PAPERS_DUMP_PATH, index=False)
+        open(CHANGELOG_PATH, 'a').close()
 
     print('Reading the papers dump from {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.read_csv(PAPERS_DUMP_PATH)
-    print(papers_df.abstract_source.value_counts())
 
     # find those papers who exist in the orkg but do not in the papers dump
     new_papers_df = find_new_papers(orkg_df, papers_df.loc[:, orkg_df.columns].fillna(''))
@@ -100,6 +121,7 @@ def main():
     # try to fetch abstracts for new incoming papers
     if new_papers_df.empty:
         print('Nothing to update. Abort!')
+        update_change_log(papers_df.abstract_source.value_counts())
         exit()
     else:
         print('Updating the papers dump...')
@@ -109,15 +131,7 @@ def main():
     print('Dumping to {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.concat([papers_df, new_papers_df])
     papers_df.to_csv(PAPERS_DUMP_PATH, index=False)
-    print(papers_df.abstract_source.value_counts())
-
-    for value in papers_df.abstract_source.unique():
-        path = '{}_{}.csv'.format(
-            os.path.join(DATA_DIR, os.path.splitext(os.path.basename(PAPERS_DUMP_PATH))[0]),
-            value
-            )
-        value_paper_df = papers_df[papers_df.abstract_source == value]
-        value_paper_df.to_csv(path, index=False)
+    update_change_log(papers_df.abstract_source.value_counts())
 
 
 if __name__ == '__main__':

@@ -1,0 +1,10 @@
+
+### 2022-08-05 ###
+semanticscholar: 5704
+no_record: 4396
+crossref: 1040
+
+### 2022-08-04 ###
+semanticscholar: 5692
+no_record: 4390
+crossref: 1036
