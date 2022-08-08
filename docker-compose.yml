@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+
+  abstracts_update:
+    build: .
+    env_file:
+      - .env
+    container_name: orkg-papers_abstracts_update_container
+    volumes:
+      - ${ORKG_PAPERS_HOST_DATA_DIRECTORY}:${ORKG_PAPERS_DOCKER_DATA_DIRECTORY}

@@ -55,12 +55,18 @@ wget <the link here> -O orkg_papers.csv
 
 ## How to Run
 
-### prerequisites
+**NOTE**: In case you're running the service for the first time and your ``ORKG_PAPERS_HOST_DATA_DIRECTORY``
+path is different from ``orkg-papers/data/``, we recommend to copy its content to your provided path, so that
+you do not need to fetch the data from scratch. In case you are executing the script with docker-compose
+you do not need to manually copy the data, since it is already configured if you set the 
+[environment variables](#environment-variables) properly.
+
+### Manual Run
+
+#### prerequisites
 
 * ``python >= 3.7.1``
 * ``poetry`` ([instructions](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions))
-
----------------------------
 
 ```commandline
 git clone https://git.tib.eu/orkg/orkg-papers.git
@@ -78,18 +84,26 @@ poetry install
 poetry run python -m src.update
 ```
 
-**NOTE**: In case you're running the service for the first time and your ``ORKG_PAPERS_DATA_DIRECTORY``
-path is different from ``orkg-papers/data/``, we recommend to copy its content to your provided path, so that
-you do not need to fetch the data from scratch.
+---------------------------
+### Docker-Compose
+To mount the host data directory into the container's please consider setting the [environment variables](#environment-variables)
+properly. 
+
+```commandline
+git clone https://git.tib.eu/orkg/orkg-papers.git
+cd orkg-papers
+docker-compose up
+```
 
 ## Environment Variables
 The following environment variables are required to run the service
 and are defined in the `.env` file.
 
-| Variable                       | Description                                                             |
-|--------------------------------|-------------------------------------------------------------------------|
-| ``ORKG_TRIPLE_STORE``          | URL to the ORKG triple store.                                           |
-| ``ORKG_PAPERS_DATA_DIRECTORY`` | Path to the directory in which the dump file will be/is already stored. |
+| Variable                              | Description                                                                                                                                         |
+|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| ``ORKG_TRIPLE_STORE``                 | URL to the ORKG triple store.                                                                                                                       |
+| ``ORKG_PAPERS_HOST_DATA_DIRECTORY``   | Path to the directory in which the dump file will be/is already stored.                                                                             |
+| ``ORKG_PAPERS_DOCKER_DATA_DIRECTORY`` | Path to the directory in which the dump file will be/is already stored inside the docker container. Only required when running with Docker-Compose. |
 
 ## License
 Since this service only aggregates data from different sources, we therefore rely on their data

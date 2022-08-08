@@ -10,8 +10,12 @@ from src.services import RDFGraphService
 
 tqdm.pandas()
 
+if os.getenv('IS_DOCKER'):
+    DATA_DIR = os.path.expanduser(os.getenv('ORKG_PAPERS_DOCKER_DATA_DIRECTORY'))
+else:
+    DATA_DIR = os.path.expanduser(os.getenv('ORKG_PAPERS_HOST_DATA_DIRECTORY'))
+
 TRIPLE_STORE_URL = os.getenv('ORKG_TRIPLE_STORE')
-DATA_DIR = os.path.expanduser(os.getenv('ORKG_PAPERS_DATA_DIRECTORY'))
 PAPERS_DUMP_PATH = os.path.join(DATA_DIR, 'orkg_papers.csv')
 CHANGELOG_PATH = os.path.join(DATA_DIR, 'changelog.txt')
 ORKG_COLUMNS = ['uri', 'title', 'doi']
