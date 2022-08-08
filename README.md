@@ -78,6 +78,10 @@ poetry install
 poetry run python -m src.update
 ```
 
+**NOTE**: In case you're running the service for the first time and your ``ORKG_PAPERS_DATA_DIRECTORY``
+path is different from ``orkg-papers/data/``, we recommend to copy its content to your provided path, so that
+you do not need to fetch the data from scratch.
+
 ## Environment Variables
 The following environment variables are required to run the service
 and are defined in the `.env` file.
