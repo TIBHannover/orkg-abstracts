@@ -1,4 +1,9 @@
 
+### 2022-08-09 ###
+semanticscholar: 5741
+no_record: 4413
+crossref: 1048
+
 ### 2022-08-08 ###
 semanticscholar: 5726
 no_record: 4410
