@@ -16,6 +16,10 @@ class CrossrefService(BaseMetadataService):
 
         self.source_name = 'crossref'
 
+        orkg_mail = 'info@orkg.org'
+        self.params = {'mailto': orkg_mail}
+        self.headers = {'User-Agent': 'ORKG-Abstracts/0.1.0 (https://www.orkg.org; mailto:{})'.format(orkg_mail)}
+
     def _by_doi(self, doi: str) -> Union[Tuple[str, str], None]:
         if not doi:
             return None
@@ -23,7 +27,7 @@ class CrossrefService(BaseMetadataService):
         url_encoded_doi = urllib.parse.quote_plus(doi)
         url = 'https://api.crossref.org/works/{}'.format(url_encoded_doi)
 
-        response = requests.get(url)
+        response = requests.get(url, headers=self.headers, params=self.params)
         if not response.ok:
             self.logger.warning('Request error returns response: {}'.format(response.__dict__))
             return None
@@ -42,7 +46,7 @@ class CrossrefService(BaseMetadataService):
         url_encoded_title = urllib.parse.quote_plus(title)
         url = 'https://api.crossref.org/works?rows=1&query.bibliographic={}'.format(url_encoded_title)
 
-        response = requests.get(url)
+        response = requests.get(url, headers=self.headers, params=self.params)
         if not response.ok:
             self.logger.warning('Request error returns response: {}'.format(response.__dict__))
             return None
