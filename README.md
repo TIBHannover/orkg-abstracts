@@ -44,7 +44,7 @@ and the output will be
 ## Direct Download
 
 You can download the abstracts dump by clicking on 
-[this link](TODO),
+[this link](https://orkg.org/files/orkg_papers.csv),
 which you can also use for you downstream application to directly download the data without any authentication.
 
 E.g.: 
