@@ -34,7 +34,7 @@ class SemanticscholarService(BaseMetadataService):
             return None
 
         url_encoded_doi = urllib.parse.quote_plus(doi)
-        url = 'https://api.semanticscholar.org/v1/paper/{}'.format(url_encoded_doi)
+        url = 'https://api.semanticscholar.org/v1/paper/{}?fields=abstract'.format(url_encoded_doi)
 
         response = requests.get(url)
         if not response.ok:
