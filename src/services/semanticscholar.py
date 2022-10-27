@@ -1,9 +1,8 @@
 import logging
-import requests
 import urllib.parse
 import time
 
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 from src.services._base import BaseMetadataService
 
@@ -29,27 +28,24 @@ class SemanticscholarService(BaseMetadataService):
         self.source_name = 'semanticscholar'
 
     @respect_rate_limits
-    def _by_doi(self, doi: str) -> Union[Tuple[str, str], None]:
+    def _by_doi(self, doi: str) -> Union[Tuple[str, Dict[str, str]], None]:
         if not doi:
             return None
 
         url_encoded_doi = urllib.parse.quote_plus(doi)
         url = 'https://api.semanticscholar.org/v1/paper/{}?fields=abstract'.format(url_encoded_doi)
 
-        response = requests.get(url)
-        if not response.ok:
-            self.logger.warning('Request error returns response: {}'.format(response.__dict__))
-            return None
-
-        response = response.json()
+        response = self._request(url)
 
         if 'abstract' in response and response['abstract']:
-            return self.source_name, response['abstract']
+            return self.source_name, {
+                'abstract': response['abstract']
+            }
 
         return None
 
     @respect_rate_limits
-    def _by_title(self, title: str) -> Union[Tuple[str, str], None]:
+    def _by_title(self, title: str) -> Union[Tuple[str, Dict[str, str]], None]:
         if not title:
             return None
 
@@ -57,17 +53,14 @@ class SemanticscholarService(BaseMetadataService):
         url = 'https://api.semanticscholar.org/graph/v1/paper/search?query={}&fields=abstract,title'.format(
             url_encoded_title)
 
-        response = requests.get(url)
-        if not response.ok:
-            self.logger.warning('Request error returns response: {}'.format(response.__dict__))
-            return None
-
-        response = response.json()
+        response = self._request(url)
 
         if 'data' in response:
             for paper in response['data']:
                 if title.lower() == paper['title'].lower() and paper['abstract']:
-                    return self.source_name, paper['abstract']
+                    return self.source_name, {
+                        'abstract': paper['abstract']
+                    }
 
         return None
 

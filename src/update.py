@@ -19,8 +19,6 @@ TRIPLE_STORE_URL = os.getenv('ORKG_TRIPLE_STORE')
 PAPERS_DUMP_PATH = os.path.join(DATA_DIR, 'orkg_papers.csv')
 CHANGELOG_PATH = os.path.join(DATA_DIR, 'changelog.txt')
 ORKG_COLUMNS = ['uri', 'title', 'doi']
-PAPER_COLUMNS = ['uri', 'title', 'doi', 'abstract_source', 'abstract', 'processed_abstract']
-
 
 SELECT = """
 PREFIX orkgp: <http://orkg.org/orkg/predicate/>
@@ -58,11 +56,12 @@ def extend_row_with_abstract(row: pd.Series) -> pd.Series:
     """
     metadata_service = MetadataService()
 
-    abstract_source, abstract = metadata_service.query(doi=row['doi'], title=row['title'])
+    metadata = metadata_service.query(doi=row['doi'], title=row['title'])
 
-    row['abstract_source'] = abstract_source
-    row['abstract'] = abstract
-    row['processed_abstract'] = process_abstract(abstract)
+    for attr in vars(metadata).keys():
+        row[attr] = metadata.__getattribute__(attr)
+
+    row['processed_abstract'] = process_abstract(metadata.abstract)
 
     return row
 
@@ -113,7 +112,7 @@ def main():
     # the papers we have already fetched their abstracts
     if not os.path.exists(PAPERS_DUMP_PATH):
         os.makedirs(DATA_DIR, exist_ok=True)
-        pd.DataFrame(columns=PAPER_COLUMNS).to_csv(PAPERS_DUMP_PATH, index=False)
+        pd.DataFrame(columns=ORKG_COLUMNS).to_csv(PAPERS_DUMP_PATH, index=False)
         open(CHANGELOG_PATH, 'a').close()
 
     print('Reading the papers dump from {}'.format(PAPERS_DUMP_PATH))
@@ -135,7 +134,7 @@ def main():
     print('Dumping to {}'.format(PAPERS_DUMP_PATH))
     papers_df = pd.concat([papers_df, new_papers_df])
     papers_df.to_csv(PAPERS_DUMP_PATH, index=False)
-    update_change_log(papers_df.abstract_source.value_counts())
+    update_change_log(papers_df.abstract_source.fillna('no_record').value_counts())
 
 
 if __name__ == '__main__':

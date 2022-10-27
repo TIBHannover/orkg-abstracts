@@ -1,7 +1,6 @@
 import logging
-import requests
 import urllib.parse
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 from src.services._base import BaseMetadataService
 
@@ -20,22 +19,19 @@ class CrossrefService(BaseMetadataService):
         self.params = {'mailto': orkg_mail}
         self.headers = {'User-Agent': 'ORKG-Abstracts/0.1.0 (https://www.orkg.org; mailto:{})'.format(orkg_mail)}
 
-    def _by_doi(self, doi: str) -> Union[Tuple[str, str], None]:
+    def _by_doi(self, doi: str) -> Union[Tuple[str, Dict[str, str]], None]:
         if not doi:
             return None
 
         url_encoded_doi = urllib.parse.quote_plus(doi)
         url = 'https://api.crossref.org/works/{}'.format(url_encoded_doi)
 
-        response = requests.get(url, headers=self.headers, params=self.params)
-        if not response.ok:
-            self.logger.warning('Request error returns response: {}'.format(response.__dict__))
-            return None
-
-        response = response.json()
+        response = self._request(url, params=self.params, headers=self.headers)
 
         if 'abstract' in response['message'] and response['message']['abstract']:
-            return self.source_name, response['message']['abstract']
+            return self.source_name, {
+                'abstract': response['message']['abstract']
+            }
 
         return None
 
@@ -46,12 +42,7 @@ class CrossrefService(BaseMetadataService):
         url_encoded_title = urllib.parse.quote_plus(title)
         url = 'https://api.crossref.org/works?rows=1&query.bibliographic={}'.format(url_encoded_title)
 
-        response = requests.get(url, headers=self.headers, params=self.params)
-        if not response.ok:
-            self.logger.warning('Request error returns response: {}'.format(response.__dict__))
-            return None
-
-        response = response.json()
+        response = self._request(url, params=self.params, headers=self.headers)
 
         doi = None
         if 'items' in response['message']:
