@@ -21,11 +21,11 @@ class BaseMetadataService(SingletonService):
         """
 
         try:
-            if kwargs['doi']:
+            if 'doi' in kwargs:
                 self.logger.debug('Querying for "{}"'.format(kwargs['doi']))
                 return self._by_doi(kwargs['doi'])
 
-            if kwargs['title']:
+            if 'title' in kwargs:
                 # ignore titles with less than 3 terms, since this cannot guarantee exact matching
                 if len(kwargs['title'].split(' ')) < 3:
                     return None
