@@ -69,7 +69,7 @@ you do not need to manually copy the data, since it is already configured if you
 * ``poetry`` ([instructions](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions))
 
 ```commandline
-git clone https://git.tib.eu/orkg/orkg-papers.git
+git clone https://gitlab.com/TIBHannover/orkg/orkg-abstracts.git
 cd orkg-papers
 ```
 
@@ -90,7 +90,7 @@ To mount the host data directory into the container's please consider setting th
 properly. 
 
 ```commandline
-git clone https://git.tib.eu/orkg/orkg-papers.git
+git clone https://gitlab.com/TIBHannover/orkg/orkg-abstracts.git
 cd orkg-papers
 docker-compose up
 ```
