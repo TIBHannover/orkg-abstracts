@@ -43,7 +43,9 @@ and the output will be
 
 ## Direct Download
 
-You can download the abstracts dump by clicking on 
+The latest versions of the file, including a changelog, can be found at https://orkg.org/files/.
+
+You can download the abstracts dump directly by clicking on 
 [this link](https://orkg.org/files/orkg_papers.csv),
 which you can also use for you downstream application to directly download the data without any authentication.
 
