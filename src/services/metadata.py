@@ -9,6 +9,10 @@ class Metadata:
 
     def __init__(self):
         self.abstract: str = None
+        self.research_field: str = None
+        self.s2_research_field: str = None
+        self.publisher: str = None
+        self.date: str = None
 
     def is_complete(self):
         """
@@ -23,7 +27,7 @@ class Metadata:
 
         :param source_info: Tuple of the source_name and a dictionary of the metadata found by that source.
         """
-        if not source_info:
+        if not source_info[1]:
             return
 
         attributes = [attr for attr in vars(self).keys() if not attr.endswith('_source')]

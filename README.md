@@ -7,37 +7,43 @@ metadata registries, and therefore, is allowed to be dealt with as their usage p
 (see [license](#license)).
 
 ## Data Format
+
 The papers dump is stored in a ``csv`` data format which makes it easy to be loaded with
-a ``pandas.DataFrame``. The dump has the following columns schema:
+a ``pandas.DataFrame``. The dump has the following columns' schema:
 
 * ``uri``: Paper URI in the ORKG.
 * ``title``: Paper's title.
 * ``doi``: Paper's DOI (Digital Object Identifier).
-* ``abstract_source``: Source from which the abstract has been fetched. Possible values are ``semanticscholar``,
-``crossref`` or ``no_record`` in case no abstract has been found for the paper.
 * ``abstract``: The abstract text exactly as we get from the sources.
 * ``processed_abstract``: Processed abstract's text. 
   * HTML tags are removed.
   * Whitespace characters are removed.
   * Lowercase is obtained.
+* ``research_field``: The research field(s) of the paper.
+* ``s2_research_field``: The ``s2FieldsOfStudy`` field from **SemanticScholar**.
+* ``publisher``: The name of the publisher.
+* ``date``: The publication date.
+* ``*_source``: These columns denotes to the source
+  (``semanticscholar`` or ``crossreff``) of the field mentioned in `*`. E.g. `abstract_source`.
+
+> Note: We use the token `<SEP>` to separate values of list-typed cells.
 
 Example usage:
 
 ```python
 import pandas as pd
 
-df = pd.read_csv('path/to/the/dump')
-print(df.head())
+df = pd.read_csv('path/to/the/dump') # currently hosted under 'https://orkg.org/files/orkg_papers.csv'
+print(df.columns)
 ```
 and the output will be 
 
 ```commandline
-                                   uri                                              title                         doi  abstract_source                                           abstract                                 processed_abstract
-0  http://orkg.org/orkg/resource/R3000  A model for contextual data sharing in smartph...  10.1108/ijpcc-06-2016-0030         crossref  <jats:sec>\n<jats:title content-type="abstract...  \n purpose \n the purpose of this paper is to ...
-1  http://orkg.org/orkg/resource/R1013  Capsules of the diatomAchnanthidium minutissim...           10.7717/peerj.858  semanticscholar  Achnanthidium minutissimum is a benthic freshw...  achnanthidium minutissimum is a benthic freshw...
-2  http://orkg.org/orkg/resource/R1000                                                NaN                         NaN        no_record                                                NaN                                                NaN
-3  http://orkg.org/orkg/resource/R1020  Open Research Knowledge Graph: Towards Machine...                         NaN  semanticscholar  Despite improved findability of and access to ...  despite improved findability of and access to ...
-4  http://orkg.org/orkg/resource/R2018                                                NaN                         NaN        no_record                                                NaN                                                NaN
+Index(['uri', 'title', 'doi', 'abstract', 'abstract_source', 'date',
+       'date_source', 'processed_abstract', 'publisher', 'publisher_source',
+       'research_field', 'research_field_source', 's2_research_field',
+       's2_research_field_source'],
+      dtype='object')
 ```
 
 

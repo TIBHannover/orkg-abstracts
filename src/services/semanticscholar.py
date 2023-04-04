@@ -2,7 +2,7 @@ import logging
 import urllib.parse
 import time
 
-from typing import Tuple, Union, Dict
+from typing import Tuple, Union, Dict, Optional
 
 from src.services._base import BaseMetadataService
 
@@ -23,44 +23,79 @@ class SemanticscholarService(BaseMetadataService):
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        super().__init__(self.logger)
-
-        self.source_name = 'semanticscholar'
+        super().__init__(self.logger, source_name='semanticscholar')
 
     @respect_rate_limits
-    def _by_doi(self, doi: str) -> Union[Tuple[str, Dict[str, str]], None]:
+    def _by_doi(self, doi: str) -> Optional[Dict[str, str]]:
         if not doi:
             return None
 
         url_encoded_doi = urllib.parse.quote_plus(doi)
-        url = 'https://api.semanticscholar.org/v1/paper/{}?fields=abstract'.format(url_encoded_doi)
+        fields = ['abstract', 'fieldsOfStudy', 's2FieldsOfStudy', 'publicationVenue', 'publicationDate']
+        url = 'https://api.semanticscholar.org/v1/paper/{}?fields={}'.format(url_encoded_doi, ','.join(fields))
 
         response = self._request(url)
 
-        if 'abstract' in response and response['abstract']:
-            return self.source_name, {
-                'abstract': response['abstract']
-            }
+        if not response:
+            return None
+
+        if response.get('publicationVenue') and response['publicationVenue'].get('name'):
+            publisher = response['publicationVenue']['name']
+        else:
+            publisher = None
+
+        output = {
+            'abstract': response['abstract'] or '',
+            'research_field': '<SEP>'.join(response['fieldsOfStudy'] or []),
+            's2_research_field': '<SEP>'.join(
+                [field['category'] for field in response['s2FieldsOfStudy'] or []]
+            ),
+            'publisher': publisher,
+            'date': response.get('publicationDate')
+        }
+
+        if any(output.values()):
+            return output
 
         return None
 
     @respect_rate_limits
-    def _by_title(self, title: str) -> Union[Tuple[str, Dict[str, str]], None]:
+    def _by_title(self, title: str) -> Optional[Dict[str, str]]:
         if not title:
             return None
 
         url_encoded_title = urllib.parse.quote_plus(title)
-        url = 'https://api.semanticscholar.org/graph/v1/paper/search?query={}&fields=abstract,title'.format(
-            url_encoded_title)
+        fields = ['abstract', 'title', 'fieldsOfStudy', 's2FieldsOfStudy', 'publicationVenue', 'publicationDate']
+
+        url = 'https://api.semanticscholar.org/graph/v1/paper/search?query={}&fields={}'.format(
+            url_encoded_title, ','.join(fields))
 
         response = self._request(url)
 
+        if not response:
+            return None
+
         if 'data' in response:
             for paper in response['data']:
-                if title.lower() == paper['title'].lower() and paper['abstract']:
-                    return self.source_name, {
-                        'abstract': paper['abstract']
+                if title.lower() == paper['title'].lower():
+
+                    if paper.get('publicationVenue') and paper['publicationVenue'].get('name'):
+                        publisher = paper['publicationVenue']['name']
+                    else:
+                        publisher = None
+
+                    output = {
+                        'abstract': paper['abstract'] or '',
+                        'research_field': '<SEP>'.join(paper['fieldsOfStudy'] or []),
+                        's2_research_field': '<SEP>'.join(
+                            [field['category'] for field in paper['s2FieldsOfStudy'] or []]
+                        ),
+                        'publisher': publisher,
+                        'date': paper.get('publicationDate')
                     }
+
+                    if any(output.values()):
+                        return output
 
         return None
 
