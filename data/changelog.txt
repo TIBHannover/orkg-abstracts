@@ -1,4 +1,50 @@
 
+### 2023-04-04 ###
+semanticscholar: 13188
+no_record: 9747
+crossref: 2270
+note: research field and publication information added. Script executed from scratch, hence the missing papers.
+
+### 2023-03-30 ###
+semanticscholar: 13698
+no_record: 10566
+crossref: 2343
+
+### 2023-03-25 ###
+semanticscholar: 13682
+no_record: 10563
+crossref: 2341
+
+### 2023-03-03 ###
+semanticscholar: 7146
+no_record: 6830
+crossref: 1648
+
+### 2023-02-03 ###
+semanticscholar: 6973
+no_record: 6026
+crossref: 1595
+
+### 2023-01-20 ###
+semanticscholar: 6771
+no_record: 5753
+crossref: 1521
+
+### 2023-01-19 ###
+semanticscholar: 6770
+no_record: 5753
+crossref: 1521
+
+### 2022-09-22 ###
+semanticscholar: 5961
+no_record: 4671
+crossref: 1160
+
+### 2022-09-01 ###
+semanticscholar: 5907
+no_record: 4639
+crossref: 1143
+
 ### 2022-08-09 ###
 semanticscholar: 5741
 no_record: 4413

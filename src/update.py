@@ -1,5 +1,7 @@
 import os
 import re
+
+import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
@@ -15,6 +17,7 @@ if os.getenv('IS_DOCKER'):
 else:
     DATA_DIR = os.path.expanduser(os.getenv('ORKG_PAPERS_HOST_DATA_DIRECTORY'))
 
+CHUNK_SIZE = 25
 TRIPLE_STORE_URL = os.getenv('ORKG_TRIPLE_STORE')
 PAPERS_DUMP_PATH = os.path.join(DATA_DIR, 'orkg_papers.csv')
 CHANGELOG_PATH = os.path.join(DATA_DIR, 'changelog.txt')
@@ -126,14 +129,20 @@ def main():
         print('Nothing to update. Abort!')
         update_change_log(papers_df.abstract_source.value_counts())
         exit()
-    else:
-        print('Updating the papers dump...')
-        new_papers_df = new_papers_df.progress_apply(extend_row_with_abstract, axis=1)
 
-    # update the papers dump
-    print('Dumping to {}'.format(PAPERS_DUMP_PATH))
-    papers_df = pd.concat([papers_df, new_papers_df])
-    papers_df.to_csv(PAPERS_DUMP_PATH, index=False)
+    print('Updating the papers dump...')
+    print('Dividing the dump into {} chunks'.format(len(new_papers_df.index) // CHUNK_SIZE))
+
+    chunks = np.array_split(new_papers_df, len(new_papers_df.index) // CHUNK_SIZE, axis=0)
+    for i, chunk in enumerate(chunks):
+        print('Processing chunk: {}/{}'.format(i + 1, len(chunks)))
+
+        chunk = chunk.progress_apply(extend_row_with_abstract, axis=1)
+
+        print('Dumping to {}'.format(PAPERS_DUMP_PATH))
+        papers_df = pd.concat([papers_df, chunk])
+        papers_df.to_csv(PAPERS_DUMP_PATH, index=False)
+
     update_change_log(papers_df.abstract_source.fillna('no_record').value_counts())
 
 
